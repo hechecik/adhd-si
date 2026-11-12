@@ -204,3 +204,6 @@ body[data-w="kurgu"] .q { font-size: 18px; }
 .rstmt { font-size: 22px; min-height: 4.2em; text-align: center; display: flex; align-items: center; justify-content: center; }
 .rlog { font-family: var(--sans); font-size: 14px; display: grid; gap: 6px; margin-top: 16px; }
 .rlog .ok { color: var(--leaf); } .rlog .no { color: var(--rose); } .rlog b { color: var(--dim); font-weight: 500; }
+
+.whisper { font-style: italic; color: var(--ember); border-left: 2px solid var(--ember); padding: 2px 0 2px 12px; margin: 0 0 14px; font-size: 16px; }
+tr.df td { color: var(--ember); font-weight: 600; }

@@ -15,11 +15,16 @@ Oyunun konusu insan; mekaniği ise bilginin kendisi. Oyuncu yalnızca bilgi topl
 - **Görseller emoji.** Kuşların görünümü işletim sistemine göre değişir; bazı eski sistemlerde birkaç emoji boş kutu çıkabilir.
 - **Ses yok.** Kuş sesleri ve müzik lisanslı kayıt gerektirir.
 - **Yolculuk bir kez oynanır.** 30 sahne sabittir; ikinci oyunda sorular aynıdır (şıkların sırası değişir). Yeniden oynanabilirlik Akış modundadır; orada da 42 kartlık havuz dört beş turda tükenir.
-- **Akışta iki kişi ayrı cihazda oynar.** Aynı tohumla aynı kartları görürler ama sonuçları kendileri karşılaştırır; oyun iki sonucu yan yana gösteremez.
+- **Meydan okuma tek yönlüdür.** İkinci oynayan iki sonucu yan yana görür; ilk oynayan görmek için karşı taraftan kod almalıdır.
+- **Kart istatistiği yok.** Hangi kartın herkesçe bilindiğini ya da kimsece bilinmediğini ölçmek, yanıtların bir yerde toplanmasını, yani sunucu gerektirir.
+- **Güncel olay kartı yok.** "Bu haftanın haberi" her hafta elle yazılmayı gerektirir; kendiliğinden güncellenemez.
+- **Kaynak künyeleri eksik.** 48 kartın 20'sinde kaynak var; kalanlar doğrulanıp eklenmeli.
 - **Yalnızca Türkçe.**
 
 ## Yol haritası (öneri)
-1. Akış havuzunu 42'den 120 karta çıkarmak; yeni dünyalar: müzik, yemek, şehir, deniz, oyun.
+1. Bütün kartlara kaynak künyesi ve bir doğrulama turu.
+2. Hızlı tur havuzunu 57'den 200 cümleye, dörtlük havuzunu 7'den 25'e çıkarmak (Fuzûlî, Nedîm, Pir Sultan, anonim Kürtçe ve Türkçe halk deyişleri; her biri kaynağından denetlenerek).
+3. Yeni dünyalar, ancak ilk iki madde bittikten sonra: mutfak, göç, dil ve sessizlik, para.
 2. Çizim kuş ve çiçek görselleri (SVG), emoji yerine.
 3. Kürtçe, Arapça ve İngilizce arayüz; özellikle 7. durak için.
 4. Çevrimdışı kullanım (service worker) ve ana ekrana ekleme.

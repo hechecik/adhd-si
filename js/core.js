@@ -157,7 +157,52 @@
     return out;
   }
 
+  /* Akış kartını tohuma göre somutlaştırır: üreteci (make) varsa çalıştırır. */
+  function buildCard(base, seed, slot) {
+    if (!base.make) return base;
+    var made = base.make(rng(seed * 131 + slot + 7), seed);
+    var out = {};
+    Object.keys(base).forEach(function (k) { if (k !== 'make') out[k] = base[k]; });
+    Object.keys(made).forEach(function (k) { out[k] = made[k]; });
+    return out;
+  }
+
+  /* Dünyalar arası sızıntı: oyuncunun önceki yanıtlarına göre sıradaki karta düşülecek fısıltı.
+     mem: { b3w, m, t, c, rp, lp, run, used }. Her fısıltı bir akışta en çok bir kez çıkar. */
+  function echo(mem, card) {
+    var u = mem.used || {};
+    var isQ = card.t === 'quiz' || card.t === 'lie';
+    var rules = [
+      ['b3w', mem.b3w && isQ, 'Az önce kalıbını basmıştın ve yanıldın. Bu sefer ne kadar eminsin?'],
+      ['m', mem.m === 0 && (card.w === 'film' || card.w === 'bugun'), 'Makineye bağlanırdım demiştin. Belki bağlandın ve bu kart da içinde.'],
+      ['t', mem.t === 1 && card.w === 'uzay', 'Işınlama kabinine girmeyecektin. Buradan sonrasına yürüyerek gidilmiyor.'],
+      ['c', mem.c === 1 && card.w === 'zaman', 'Unutabilmek istemiştin. Takvimler de unutur; bak.'],
+      ['rpH', mem.rp >= 6 && card.t === 'lie', 'Hızlı turda efsaneleri iyi ayıkladın. Bu üçü daha sinsi.'],
+      ['rpL', mem.rp <= 3 && card.t === 'lie', 'Hızlı turda efsaneler seni yakaladı. Şimdi acelen yok; iyi bak.'],
+      ['lp', mem.lp && !!card.verse, 'Az önce bir harfi eksik yazdın. Şimdi bir başkası eksik bırakmış.'],
+      ['runH', mem.run >= 3 && card.w === 'tasavvuf', 'Üst üste bildin. Bildiğini sananın elinden mum alınır derler; dikkat.'],
+      ['runL', mem.run <= -2 && card.w === 'tasavvuf', 'Üst üste yanıldın. Karanlıkta file dokunanların hepsi de yanılmıştı.']
+    ];
+    for (var i = 0; i < rules.length; i++) if (rules[i][1] && !u[rules[i][0]]) return { k: rules[i][0], text: rules[i][2] };
+    return null;
+  }
+
+  /* Meydan okuma kodu: bir akışın sonucunu sunucusuz taşır. */
+  function encodeDuel(d) {
+    return toB64(JSON.stringify({ d: 1, s: d.s, n: d.n, l: d.l, r: d.r })).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  }
+  function decodeDuel(code) {
+    try {
+      var b64 = String(code || '').trim().replace(/-/g, '+').replace(/_/g, '/');
+      while (b64.length % 4) b64 += '=';
+      var d = JSON.parse(fromB64(b64));
+      if (!d || d.d !== 1 || !(d.s >= 1 && d.s <= 999999) || !Array.isArray(d.r)) return null;
+      return { s: d.s, n: String(d.n || 'Arkadaşın').slice(0, 20), l: +d.l || 0, r: d.r.slice(0, 20).map(String) };
+    } catch (e) { return null; }
+  }
+
   var Core = {
+    buildCard: buildCard, echo: echo, encodeDuel: encodeDuel, decodeDuel: decodeDuel,
     lipoCheck: lipoCheck, rng: rng, flowDeck: flowDeck,
     ALPHABET: ALPHABET, syllables: syllables, haikuCheck: haikuCheck, caesar: caesar,
     score: score, encodeSave: encodeSave, decodeSave: decodeSave, newState: newState,

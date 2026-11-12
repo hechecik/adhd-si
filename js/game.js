@@ -14,6 +14,7 @@
   Data.birds.forEach(function (b) { birdById[b.id] = b; });
   var TOTAL = 30;
   var FLOW = null;     // Akış modundayken etkin kart
+  var LAST = {};       // etkin kartta olanlar: seçilen şık, hızlı tur sonucu vb.
   var FLOW_LEN = 12;   // bir akıştaki kart sayısı
   function setWorld(w) { document.body.setAttribute('data-w', w || ''); }
 
@@ -219,7 +220,8 @@
   /* ---------- sahne çerçevesi ---------- */
   function head(ci, si, sc) {
     if (FLOW) {
-      return '<div class="kicker">' + esc(Data.worlds[sc.w]) + ' · ' + (S.flow.i + 1) + '/' + FLOW_LEN + ' · tohum ' + S.flow.seed + '</div>';
+      return '<div class="kicker">' + esc(Data.worlds[sc.w]) + ' · ' + (S.flow.i + 1) + '/' + FLOW_LEN + ' · tohum ' + S.flow.seed + '</div>' +
+        (S.flow.et && S.flow.ei === S.flow.i ? '<p class="whisper">🪶 ' + esc(S.flow.et) + '</p>' : '');
     }
     var ch = Data.chapters[ci];
     var h = '<div class="kicker">' + (ci + 1) + '. durak · ' + esc(ch.title) + ' · ' + (si + 1) + '/' + ch.scenes.length + '</div>';
@@ -276,13 +278,14 @@
 
   function doneBlock(sc, verdict, cls) {
     return '<div class="explain">' + (verdict ? '<div class="verdict ' + cls + '">' + verdict + '</div>' : '') +
-      '<p>' + esc(sc.x) + '</p></div><div class="mt"><button class="btn" id="cont">Devam</button></div>';
+      '<p>' + esc(sc.x) + '</p>' + (sc.src ? '<p class="small dim">Kaynak: ' + esc(sc.src) + '</p>' : '') +
+      '</div><div class="mt"><button class="btn" id="cont">Devam</button></div>';
   }
   function finish(ci, si, sc, light, verdict, cls, bet, correct) {
     var box = app.querySelector('#after');
     box.innerHTML = doneBlock(sc, verdict, cls);
     box.querySelector('#cont').addEventListener('click', function () {
-      if (FLOW) return flowDone(sc, light, correct);
+      if (FLOW) return flowDone(sc, light, correct, bet);
       award(sc, light, bet, correct, function () { goNext(ci, si); });
     });
     box.querySelector('#cont').focus();
@@ -590,7 +593,8 @@
       b.addEventListener('click', function () {
         opts.forEach(function (x) { x.disabled = true; });
         b.classList.add('sel');
-        S.notes[sc.id] = sc.o[+b.getAttribute('data-i')]; store();
+        LAST.pick = +b.getAttribute('data-i');
+        S.notes[sc.id] = sc.o[LAST.pick]; store();
         finish(ci, si, sc, 1, 'Seçimin yazıldı. ' + lightText(1), 'ok');
       });
     });
@@ -614,7 +618,7 @@
       app.querySelector('#ok').hidden = app.querySelector('#skip').hidden = true;
       finish(ci, si, sc, light, v + lightText(light), 'ok');
     }
-    on('#ok', 'click', function () { S.notes[sc.id] = tx.value.trim(); store(); end(3, 'Başardın. '); });
+    on('#ok', 'click', function () { LAST.lipo = true; S.notes[sc.id] = tx.value.trim(); store(); end(3, 'Başardın. '); });
     on('#skip', 'click', function () { end(0, 'Geçildi. '); });
   };
 
@@ -645,16 +649,17 @@
       if (epoch !== my || k < 0 || k >= sc.items.length) return;
       var ok = v !== null && v === sc.items[k][1];
       if (ok) right++;
-      log.push([sc.items[k][0], sc.items[k][1], ok]);
+      log.push([sc.items[k][0], sc.items[k][1], ok, sc.items[k][2]]);
       next();
     }
     function end() {
       my = -1;
       app.querySelector('.rapid').hidden = true;
       app.querySelector('#res').innerHTML = '<div class="rlog">' + log.map(function (l) {
-        return '<div class="' + (l[2] ? 'ok' : 'no') + '">' + (l[2] ? '✓' : '✗') + ' ' + esc(l[0]) + ' <b>' + (l[1] ? 'Doğru' : 'Efsane') + '</b></div>';
+        return '<div class="' + (l[2] ? 'ok' : 'no') + '">' + (l[2] ? '✓' : '✗') + ' ' + esc(l[0]) + ' <b>' + (l[1] ? 'Doğru' : 'Efsane') + '</b>' + (l[3] ? '<br><span class="dim">' + esc(l[3]) + '</span>' : '') + '</div>';
       }).join('') + '</div>';
       var light = Math.floor(right / 2);
+      LAST.rp = right;
       finish(ci, si, sc, light, right + ' / ' + sc.items.length + ' bildin. ' + lightText(light), right * 2 >= sc.items.length ? 'ok' : 'no', null, right * 2 >= sc.items.length);
     }
     function start(t) {
@@ -675,28 +680,53 @@
   function flowDeck() { return Core.flowDeck(S.flow.seed, Data.flow, FLOW_LEN); }
   function randomSeed() { return 100000 + Math.floor(Math.random() * 900000); }
 
-  function renderFlowStart() {
+  function renderFlowStart(prefill) {
+    if (typeof prefill !== 'string') prefill = '';
     var cur = S.flow && S.flow.i < FLOW_LEN ? S.flow : null;
     show(
       '<div class="kicker">Akış</div><h2>On iki kart, on iki dünya</h2>' +
       '<p class="dim">Her kart başka bir yerden gelir: bir dize, bir film, bir görenek, bir düşünce deneyi, bir hızlı tur. Kartlar bir iki dakika sürer.</p>' +
       '<p class="dim">Kartları altı haneli bir <b>tohum</b> belirler. Aynı tohumu giren herkes aynı kartları aynı sırayla görür: tohumu bir arkadaşına ver, sonuçlarınızı karşılaştırın. Yarıda bırakırsan tohum ve kaldığın kart saklanır.</p>' +
       (cur ? '<div class="card" style="margin-bottom:18px"><p style="margin:0 0 12px">Yarım kalan akış: tohum <b>' + cur.seed + '</b>, ' + (cur.i + 1) + '. kart.</p><button class="btn" id="fgo">Sürdür</button></div>' : '') +
-      '<label for="seed">Tohum (boş bırakırsan rastgele seçilir)</label>' +
-      '<input type="text" id="seed" inputmode="numeric" maxlength="6" placeholder="örneğin 271828" style="max-width:220px">' +
+      '<label for="seed">Tohum ya da bir arkadaşının meydan okuma kodu (boş bırakırsan rastgele tohum seçilir)</label>' +
+      '<input type="text" id="seed" placeholder="örneğin 271828" value="' + esc(prefill || '') + '">' +
+      '<p class="small" id="serr" style="color:var(--rose);min-height:1.4em"></p>' +
+      '<label for="fname">Adın (karşılaştırma tablosunda görünür)</label>' +
+      '<input type="text" id="fname" maxlength="20" style="max-width:220px" value="' + esc(S.players[0].n) + '">' +
       '<div class="row mt"><button class="btn' + (cur ? ' alt' : '') + '" id="fnew">Yeni akış başlat</button><button class="ghost" id="back">Geri</button></div>', false);
     on('#fgo', 'click', renderFlowCard);
     on('#fnew', 'click', function () {
-      var v = parseInt(app.querySelector('#seed').value.replace(/\D/g, ''), 10);
-      S.flow = { seed: v >= 1 && v <= 999999 ? v : randomSeed(), i: 0, l: 0, ok: 0, n: 0 };
+      var raw = app.querySelector('#seed').value.trim();
+      S.players[0].n = app.querySelector('#fname').value.trim() || S.players[0].n;
+      var at = raw.indexOf('#m=');
+      if (at !== -1) raw = raw.slice(at + 3);
+      var duel = null, v = NaN;
+      if (/^\d{1,6}$/.test(raw)) v = parseInt(raw, 10);
+      else if (raw) {
+        duel = Core.decodeDuel(raw);
+        if (!duel) { app.querySelector('#serr').textContent = 'Bu ne bir tohum ne de okunabilir bir kod.'; return; }
+        v = duel.s;
+      }
+      S.flow = { seed: v >= 1 && v <= 999999 ? v : randomSeed(), i: 0, l: 0, ok: 0, n: 0, r: [], mem: { run: 0, used: {} }, vs: duel };
       store(); renderFlowCard();
     });
     on('#back', 'click', function () { S.done.length || Object.keys(S.pos).length ? renderMap() : renderTitle(); });
   }
 
   function renderFlowCard() {
-    var card = Data.flow[flowDeck()[S.flow.i]];
-    if (!card) return renderFlowEnd();
+    var base = Data.flow[flowDeck()[S.flow.i]];
+    if (!base) return renderFlowEnd();
+    var card = Core.buildCard(base, S.flow.seed, S.flow.i);
+    var f = S.flow;
+    if (!f.mem) f.mem = { run: 0, used: {} };
+    if (!f.r) f.r = [];
+    if (f.ei !== f.i) {
+      var e = Core.echo(f.mem, card);
+      f.ei = f.i; f.et = e ? e.text : '';
+      if (e) f.mem.used[e.k] = 1;
+      store();
+    }
+    LAST = {};
     FLOW = card;
     setWorld(card.w);
     SCENES[card.t](-1, -1, card);
@@ -708,7 +738,17 @@
     exit.querySelector('#fexit').addEventListener('click', renderFlowStart);
   }
 
-  function flowDone(sc, light, correct) {
+  function flowDone(sc, light, correct, bet) {
+    var m = S.flow.mem;
+    var isQ = sc.t === 'quiz' || sc.t === 'lie';
+    if (isQ) m.b3w = bet === 3 && !correct;
+    if (typeof correct === 'boolean') m.run = correct ? Math.max(1, m.run + 1) : Math.min(-1, m.run - 1);
+    if (sc.id === 137) m.m = LAST.pick;
+    if (sc.id === 138) m.t = LAST.pick;
+    if (sc.id === 114) m.c = LAST.pick;
+    if (sc.t === 'rapid') m.rp = LAST.rp;
+    if (LAST.lipo) m.lp = true;
+    S.flow.r.push(sc.t === 'dilemma' ? 'd' + LAST.pick : sc.t === 'rapid' ? 'r' + LAST.rp : typeof correct === 'boolean' ? (correct ? '1' : '0') : '-');
     S.flow.i++;
     S.flow.l = Math.max(0, S.flow.l + light);
     if (typeof correct === 'boolean') { S.flow.n++; if (correct) S.flow.ok++; }
@@ -718,15 +758,40 @@
 
   function renderFlowEnd() {
     var f = S.flow;
-    var line = 'Otuz Kuş · tohum ' + f.seed + ' · ' + f.ok + '/' + f.n + ' doğru · ' + f.l + ' ışık. Aynı tohumla sen de dene.';
+    var code = Core.encodeDuel({ s: f.seed, n: S.players[0].n, l: f.l, r: f.r || [] });
+    var link = location.href.split('#')[0] + '#m=' + code;
+    var line = 'Otuz Kuş · tohum ' + f.seed + ' · ' + f.ok + '/' + f.n + ' doğru · ' + f.l + ' ışık. Aynı kartları sen de oyna, sonuçlarımız yan yana gelsin: ' + link;
+    var deck = flowDeck(), cmp = '';
+    function lab(v, card) {
+      if (v === undefined) return '·';
+      if (v === '1') return '✓'; if (v === '0') return '✗';
+      if (v[0] === 'r') return v.slice(1) + '/8';
+      if (v[0] === 'd') return esc((card.o[+v.slice(1)] || '').split('.')[0]);
+      return '·';
+    }
+    if (f.vs) {
+      var diff = 0, rows = '';
+      deck.forEach(function (ix, i) {
+        var card = Core.buildCard(Data.flow[ix], f.seed, i), a = (f.r || [])[i], b = f.vs.r[i];
+        var differs = a !== b && a !== '-' && a !== undefined && b !== undefined;
+        if (differs) diff++;
+        rows += '<tr' + (differs ? ' class="df"' : '') + '><td>' + (i + 1) + '. ' + esc(Data.worlds[card.w]) + '</td><td>' + lab(a, card) + '</td><td>' + lab(b, card) + '</td></tr>';
+      });
+      cmp = '<div class="card mt" style="text-align:left"><h3>' + esc(S.players[0].n) + ' ile ' + esc(f.vs.n) + '</h3>' +
+        '<table><tr><th>Kart</th><th>' + esc(S.players[0].n) + '</th><th>' + esc(f.vs.n) + '</th></tr>' + rows + '</table>' +
+        '<p class="small" style="margin:12px 0 0">' + (diff ? diff + ' kartta ayrı düştünüz. Işık: ' + f.l + ' ve ' + f.vs.l + '. Asıl konuşulacak olanlar işaretli satırlar.' : 'Bütün kartlarda aynı sonuca vardınız. Işık: ' + f.l + ' ve ' + f.vs.l + '.') + '</p></div>';
+    }
     show(
       '<div class="center" style="padding-top:5vh"><div style="font-size:54px">🌱</div><div class="kicker">Akış bitti</div>' +
       '<h2>Tohum ' + f.seed + '</h2><p>' + f.ok + ' / ' + f.n + ' doğru · ' + f.l + ' ışık</p>' +
-      '<p class="dim">Bu tohumu birine ver. Aynı on iki kartı oynasın; nerede ayrıldığınıza bakın.</p>' +
-      '<div class="card" style="text-align:left"><p class="small" id="fl" style="margin:0 0 10px">' + esc(line) + '</p>' +
-      '<button class="btn alt" id="fcp">Kopyala</button> <span class="small dim" id="fcs"></span></div>' +
+      cmp +
+      '<div class="card mt" style="text-align:left"><div class="kicker">Meydan oku</div>' +
+      '<p class="small" style="margin:0 0 10px">Bağlantıyı ya da kodu birine gönder. O da aynı on iki kartı oynar; sonunda ikinizin yanıtları yan yana çıkar. Sunucu yok: sonuçların kodun içinde taşınır.</p>' +
+      '<div class="code">' + esc(code) + '</div>' +
+      '<div class="row" style="margin-top:10px"><button class="btn alt" id="fcp">Bağlantılı mesajı kopyala</button><button class="btn alt" id="fcc">Yalnızca kodu kopyala</button> <span class="small dim" id="fcs"></span></div></div>' +
       '<div class="row mid mt"><button class="btn" id="again">Yeni akış</button><button class="btn alt" id="book">Tüy defteri</button><button class="ghost" id="home">Ana ekran</button></div></div>', false);
     on('#fcp', 'click', function () { copyText(line, app.querySelector('#fcs')); });
+    on('#fcc', 'click', function () { copyText(code, app.querySelector('#fcs')); });
     on('#again', 'click', renderFlowStart);
     on('#book', 'click', renderBook);
     on('#home', 'click', function () { renderTitle(); });
@@ -834,6 +899,12 @@
   document.getElementById('btn-save').addEventListener('click', saveDialog);
 
   (function boot() {
+    var mm = /#m=([\w-]+)/.exec(location.hash);
+    if (mm) {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* önemsiz */ }
+      S = load() || Core.newState(['Yolcu']); store();
+      return renderFlowStart(mm[1]);
+    }
     var m = /#k=([\w-]+)/.exec(location.hash);
     if (m) {
       var st = Core.decodeSave(m[1]);

@@ -25,7 +25,13 @@ Yedi durağın yanında ikinci bir oyun biçimi: on iki kartlık, on dakikalık 
 - **Yazarların biçimleriyle bulmacalar:** Perec gibi e'siz cümle yazmak, Walser'ın milimetrik yazısını büyüteçle okumak, Yunus Emre'nin karışmış dörtlüğünü dizmek ve eksik sözcüğünü bulmak, Mevlânâ'ya atfedilen öğüdün şifresini çözmek.
 - **Diğer kart türleri:** süreli doğru/efsane turu, doğru yanıtı olmayan ikilemler (deneyim makinesi, ışınlama kabini, unutmayan bellek), "üçünden biri yalan".
 
-Havuzda 42 kart var (`js/flow.js`).
+- **Üreteçler:** Kartların bir bölümü tohuma göre değişir (`js/gen.js`). E'siz ve a'sız cümle kartı yirmi konudan birini verir; sıralama ve eksik sözcük kartları yedi kamu malı dörtlükten, eksik dize kartları on haikudan birini seçer; hızlı tur 57 cümlelik havuzdan dört doğru dört efsane çeker; düşünce deneyi üreteci 27 ayrı teklif kurar.
+- **Fısıltılar:** Önceki kartlarda verdiğin yanıtlar sonraki kartların başına bir cümle düşürür. Deneyim makinesine "bağlanırdım" dediysen bir film kartında sana bunu hatırlatır; kalıbını basıp yanıldıysan sıradaki soruda sorar.
+- **Meydan okuma:** Akışın sonunda bir bağlantı ve kod çıkar. Gönderdiğin kişi aynı on iki kartı oynar; sonunda iki kişinin yanıtları yan yana gelir ve ayrı düştüğünüz kartlar işaretlenir. Sunucu yoktur; sonuçlar kodun içinde taşınır.
+- **Karşılaştırma kartları:** Aynı insan işinin iki ayrı kültürdeki hâli (yas, isim koyma, misafirlik) yan yana verilir ve "hangisi sana yakın" diye sorulur.
+- **Kaynak künyesi:** Bir yayına dayanan kartlarda açıklamanın altında kaynak yazar.
+
+Havuzda 48 kart var (`js/flow.js`, `js/gen.js`).
 
 ## Öne çıkan fikirler
 
@@ -52,6 +58,7 @@ css/style.css   görünüm
 js/core.js      saf mantık: hece sayımı, şifre, puan, tüy kodu, içerik denetimi
 js/data.js      bütün içerik: kuşlar, duraklar, sahneler
 js/flow.js      Akış modunun kartları ve dünyaları
+js/gen.js       Akış üreteçleri, havuzlar ve kaynak künyeleri
 js/game.js      motor ve arayüz
 tests/test.js   birim testleri
 docs/TASARIM.md tasarım notları, sınırlar ve yol haritası
