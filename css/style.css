@@ -7,6 +7,7 @@
   --dim: #a9a590;
   --ember: #f0a04b;
   --ember-2: #e2683c;
+  --glow: #3a2230;
   --leaf: #7fc8a0;
   --rose: #e58a8a;
   --serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, "Times New Roman", serif;
@@ -16,7 +17,8 @@
 [hidden] { display: none !important; }
 html, body { margin: 0; min-height: 100%; }
 body {
-  background: radial-gradient(ellipse at 50% 115%, #3a2230 0%, var(--night-2) 38%, var(--night) 75%) fixed;
+  background: radial-gradient(ellipse at 50% 115%, var(--glow) 0%, var(--night-2) 38%, var(--night) 75%) fixed;
+  transition: background-color .4s;
   color: var(--ink);
   font-family: var(--serif);
   font-size: 18px;
@@ -55,10 +57,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border: 1px solid var(--ember); background: var(--ember); color: #1b1206;
   font-family: var(--sans); font-size: 16px; font-weight: 600;
 }
-.btn:hover { background: #f6b267; }
+.btn:hover { filter: brightness(1.12); }
 .btn:disabled { opacity: .4; cursor: default; }
 .btn.alt { background: transparent; color: var(--ember); }
-.btn.alt:hover { background: rgba(240, 160, 75, .12); }
+.btn.alt:hover { background: rgba(255, 255, 255, .07); filter: none; }
 .ghost { background: none; border: 0; color: var(--dim); font-family: var(--sans); font-size: 14px; padding: 6px 8px; border-radius: 6px; }
 .ghost:hover { color: var(--ink); background: rgba(255, 255, 255, .06); }
 :focus-visible { outline: 2px solid var(--ember); outline-offset: 2px; }
@@ -178,3 +180,27 @@ th { color: var(--dim); font-weight: 500; }
   * { animation: none !important; }
   .ring { transition-duration: .01s !important; }
 }
+
+/* Dünyalar: her durak ve her akış kartı kendi rengine bürünür */
+body[data-w="magara"], body[data-w="antropoloji"] { --ember: #d9a066; --glow: #3b2c1c; }
+body[data-w="tohum"], body[data-w="evrim"] { --ember: #8fd18a; --glow: #173524; }
+body[data-w="soz"], body[data-w="yazi"] { --ember: #b8a7f0; --glow: #2b2350; }
+body[data-w="gok"], body[data-w="uzay"] { --ember: #7fb6f5; --glow: #10294d; --night: #070a18; }
+body[data-w="ayna"], body[data-w="kurgu"] { --ember: #8dffb0; --glow: #0c3322; --night: #060d0b; --night-2: #0c1a15; --panel: #10231c; --line: #24503c; }
+body[data-w="yol"], body[data-w="siir"] { --ember: #e9a0b5; --glow: #40202e; }
+body[data-w="film"] { --ember: #f0c94b; --glow: #2c2710; --night: #0b0b0c; --night-2: #151517; --panel: #1d1d20; --line: #3a3a40; }
+body[data-w="gorenek"] { --ember: #f08a4b; --glow: #48200f; }
+body[data-w="zaman"] { --ember: #e8705c; --glow: #47161a; }
+body[data-w="tasavvuf"] { --ember: #5fd0c0; --glow: #0f3a3a; }
+body[data-w="bugun"] { --ember: #f57fb0; --glow: #401a3a; }
+body[data-w="hizli"] { --ember: #ffd24b; --glow: #4a3208; }
+body[data-w="kurgu"] .q, body[data-w="ayna"] .kicker { font-family: ui-monospace, Menlo, Consolas, monospace; }
+body[data-w="kurgu"] .q { font-size: 18px; }
+
+.verse { font-size: 22px; line-height: 1.7; padding: 14px 20px; margin: 0 0 18px; border-left: 3px solid var(--ember); }
+.micro { font-size: 2px; line-height: 1.5; min-height: 60px; display: flex; align-items: center; justify-content: center; text-align: center; margin-bottom: 12px; }
+.tbar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; margin-bottom: 16px; }
+.tbar i { display: block; height: 100%; width: 100%; background: var(--ember); }
+.rstmt { font-size: 22px; min-height: 4.2em; text-align: center; display: flex; align-items: center; justify-content: center; }
+.rlog { font-family: var(--sans); font-size: 14px; display: grid; gap: 6px; margin-top: 16px; }
+.rlog .ok { color: var(--leaf); } .rlog .no { color: var(--rose); } .rlog b { color: var(--dim); font-weight: 500; }

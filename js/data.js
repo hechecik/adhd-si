@@ -41,6 +41,7 @@
 
   var chapters = [
     {
+      tell: 'Şempanzeden gelmedik; onunla altı yedi milyon yıl önce yaşamış ortak bir atayı paylaşıyoruz. Şempanze dedemiz değil, kuzenimiz.',
       id: 'ates', title: 'Ateş', sub: 'Nereden geldik?', icon: '🔥',
       scenes: [
         { t: 'story', title: 'Uyanış', p: [
@@ -69,6 +70,7 @@
       ]
     },
     {
+      tell: 'Bilinen en eski çalgılardan biri, 40 bin yıl önce bir akbabanın kanat kemiğinden oyulmuş flüt. Buzul çağının ortasında biri oturup müzik aleti yapmış.',
       id: 'magara', title: 'Mağara', sub: 'İlk işaret', icon: '✋',
       scenes: [
         { t: 'story', title: 'Duvardaki el', p: [
@@ -95,6 +97,7 @@
       ]
     },
     {
+      tell: 'Göbekli Tepe\'yi dikenlerin tarlası da çömleği de yoktu. Önce tapınak yapıldı, sonra köy kuruldu.',
       id: 'tohum', title: 'Tohum', sub: 'Kim kimi evcilleştirdi?', icon: '🌾',
       scenes: [
         { t: 'story', title: 'Karacadağ\'ın eteğinde', p: [
@@ -122,6 +125,7 @@
       ]
     },
     {
+      tell: 'Yazıyı şairler değil muhasebeciler buldu: ilk tabletler arpa, koyun ve bira dökümleri. Adını bildiğimiz ilk yazar ise Enheduanna adında bir kadın.',
       id: 'soz', title: 'Söz', sub: 'Uçan ve kalan', icon: '📜',
       scenes: [
         { t: 'story', title: 'Kil tablet', p: [
@@ -150,6 +154,7 @@
       ]
     },
     {
+      tell: 'Potlaç şölenlerinde en saygın kişi en çok mal biriktiren değil, en çok dağıtandı. Kanada bunu 66 yıl yasakladı.',
       id: 'gok', title: 'Gök', sub: 'Herkesin bir hikâyesi var', icon: '🌙',
       scenes: [
         { t: 'story', title: 'Yıldızların altında', p: [
@@ -180,6 +185,7 @@
       ]
     },
     {
+      tell: 'Üç kapı probleminde kapıyı değiştirmek kazanma şansını üçte ikiye çıkarır. 1990\'da bunu yazan köşe yazarına binlerce itiraz mektubu geldi; haklı olan oydu.',
       id: 'ayna', title: 'Ayna', sub: 'Bildiğini nereden biliyorsun?', icon: '🪞',
       scenes: [
         { t: 'story', title: 'Aynalı oda', p: [
@@ -211,6 +217,7 @@
       ]
     },
     {
+      tell: 'Attâr\'ın hikâyesinde Simurg\'u arayan kuşlardan yalnızca otuzu yolun sonuna varır ve bir aynayla karşılaşır. "Sî murg" zaten otuz kuş demektir.',
       id: 'yol', title: 'Yol', sub: 'Sürgün, bakış, hafıza', icon: '🧳',
       scenes: [
         { t: 'story', title: 'Beş ateş', p: [

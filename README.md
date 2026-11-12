@@ -16,11 +16,24 @@ Bir ateşin başında uyanırsın. Karşındaki kuş, Hüdhüd, sana yol göster
 | 6 | Ayna | Epistemoloji, olasılık, yanılgılar | zekâ soruları, "yalanı bul", yazı |
 | 7 | Yol | Derviş, Cegerxwîn, Galeano, Berger, Uyar | soru, eşleştirme, son cümle |
 
+## Akış modu
+
+Yedi durağın yanında ikinci bir oyun biçimi: on iki kartlık, on dakikalık kısa tur. Her kart başka bir dünyadan gelir ve ekran o dünyanın rengine bürünür: şiir, yazı oyunu, film, görenek, antropoloji, evrim, takvim, uzay, tasavvuf, düşünce deneyi, bugün, hızlı tur.
+
+- **Tohum:** Kartları altı haneli bir sayı belirler. Aynı tohum herkese aynı kartları aynı sırayla verir; iki kişi aynı tohumu oynayıp sonuçlarını karşılaştırabilir. Yarıda kalan akış tohum ve kart numarasıyla saklanır.
+- **Ritim:** Art arda aynı dünyadan iki kart ve art arda iki "ağır" (yazma ya da uzun düşünme isteyen) kart gelmez.
+- **Yazarların biçimleriyle bulmacalar:** Perec gibi e'siz cümle yazmak, Walser'ın milimetrik yazısını büyüteçle okumak, Yunus Emre'nin karışmış dörtlüğünü dizmek ve eksik sözcüğünü bulmak, Mevlânâ'ya atfedilen öğüdün şifresini çözmek.
+- **Diğer kart türleri:** süreli doğru/efsane turu, doğru yanıtı olmayan ikilemler (deneyim makinesi, ışınlama kabini, unutmayan bellek), "üçünden biri yalan".
+
+Havuzda 42 kart var (`js/flow.js`).
+
 ## Öne çıkan fikirler
 
 - **Bahisli yanıt:** Her soruda ne kadar emin olduğunu seçersin (1-3). Doğruysa o kadar ışık kazanır, yanlışsa kaybedersin. Oyunun sonunda bahis düzeyine göre isabet tablon çıkar: ne kadar bildiğini ne kadar biliyorsun?
 - **Güvenilmez anlatıcı:** Hüdhüd anlatının bir yerinde yaygın bir efsaneyi doğruymuş gibi söyler. 6. durakta hangisi olduğunu bulman istenir.
 - **Tüy defteri:** Her tüy gerçek bir kuşa ve o kuşa dair doğrulanabilir bir bilgiye bağlıdır. Yazdığın haiku ve yanıtlar da defterde durur.
+- **Bilgin mi, şair mi:** Oyun sonunda, ne kadar bildiğine ve ne kadar kesin konuştuğuna göre yolun sana verdiği adı söyler. Oynarken söylemez.
+- **Birine anlat:** Her durağın sonunda, kopyalayıp birine gönderebileceğin tek cümlelik bir bilgi çıkar.
 - **Tüy kodu:** İlerleme tarayıcıda kendiliğinden saklanır. "Kaydet" düğmesi, yolculuğu başka cihaza taşıyan bir bağlantı ve kod üretir. Hesap ya da sunucu gerekmez.
 
 ## Çalıştırma
@@ -38,13 +51,14 @@ index.html      sayfa iskeleti
 css/style.css   görünüm
 js/core.js      saf mantık: hece sayımı, şifre, puan, tüy kodu, içerik denetimi
 js/data.js      bütün içerik: kuşlar, duraklar, sahneler
+js/flow.js      Akış modunun kartları ve dünyaları
 js/game.js      motor ve arayüz
 tests/test.js   birim testleri
 docs/TASARIM.md tasarım notları, sınırlar ve yol haritası
 ```
 
-Yeni içerik eklemek için yalnızca `js/data.js` düzenlenir; kurallar `AGENTS.md` dosyasındadır.
+Yeni içerik eklemek için yalnızca `js/data.js` ve `js/flow.js` düzenlenir; kurallar `AGENTS.md` dosyasındadır.
 
 ## Telif notu
 
-Oyun, yaşayan ya da telifi süren şair ve yazarların eserlerinden alıntı yapmaz; onları yaşamları, temaları ve eser adlarıyla anlatır. Bashō örneği, 1686 tarihli özgün haikunun bu oyun için yapılmış serbest çevirisidir.
+Oyun, yaşayan ya da telifi süren şair ve yazarların eserlerinden alıntı yapmaz; onları yaşamları, temaları ve eser adlarıyla anlatır. Bashō ve Issa örnekleri, özgün haikuların bu oyun için yapılmış serbest çevirileridir; Yunus Emre dizeleri kamu malıdır.

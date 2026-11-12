@@ -13,6 +13,9 @@
   var birdById = {};
   Data.birds.forEach(function (b) { birdById[b.id] = b; });
   var TOTAL = 30;
+  var FLOW = null;     // Akış modundayken etkin kart
+  var FLOW_LEN = 12;   // bir akıştaki kart sayısı
+  function setWorld(w) { document.body.setAttribute('data-w', w || ''); }
 
   /* ---------- yardımcılar ---------- */
   function esc(s) {
@@ -28,8 +31,9 @@
     }
     return a;
   }
-  function show(html, withBar) {
+  function show(html, withBar, keepWorld) {
     epoch++;
+    if (!keepWorld) { setWorld(''); FLOW = null; }
     app.innerHTML = html;
     bar.hidden = !withBar;
     if (withBar) renderStatus();
@@ -89,6 +93,7 @@
   /* ---------- başlangıç ekranları ---------- */
   function renderTitle(msg) {
     var saved = load();
+    var started = saved && (saved.done.length > 0 || Object.keys(saved.pos).length > 0);
     show(
       '<div class="title-screen">' +
       '<span class="feather">🪶</span>' +
@@ -97,14 +102,15 @@
       'Yedi durak, otuz tüy: insanın nereden geldiğine, neye inandığına ve bildiğini nereden bildiğine dair bir yolculuk.</p>' +
       (msg ? '<p class="small" style="color:var(--rose)">' + esc(msg) + '</p>' : '') +
       '<div class="stack" style="max-width:320px;margin:0 auto">' +
-      (saved ? '<button class="btn" id="go-on">Kaldığın yerden devam et (' + saved.done.length + '/30)</button>' : '') +
-      '<button class="btn' + (saved ? ' alt' : '') + '" id="go-new">Yeni yolculuk</button>' +
+      (started ? '<button class="btn" id="go-on">Kaldığın yerden devam et (' + saved.done.length + '/30)</button>' : '') +
+      '<button class="btn' + (started ? ' alt' : '') + '" id="go-new">Yeni yolculuk</button>' +
+      '<button class="btn alt" id="go-flow">Akış: on iki kartlık kısa tur</button>' +
       '<button class="btn alt" id="go-code">Tüy koduyla devam et</button>' +
       '<button class="ghost" id="go-how">Nasıl oynanır?</button>' +
       '</div></div>', false);
     on('#go-on', 'click', function () { S = saved; renderMap(); });
     on('#go-new', 'click', function () {
-      if (!saved) return renderSetup();
+      if (!started) return renderSetup();
       openModal(
         '<h3>Yeni yolculuk</h3><p class="small">Kayıtlı yolculuğun (' + saved.done.length + '/30 tüy) yenisi başlayınca silinir. ' +
         'Saklamak istersen önce devam edip "Kaydet"ten tüy kodunu al.</p>' +
@@ -112,6 +118,7 @@
       modalBox.querySelector('#new-ok').addEventListener('click', function () { closeModal(); renderSetup(); });
       modalBox.querySelector('[data-close]').addEventListener('click', closeModal);
     });
+    on('#go-flow', 'click', function () { S = saved || Core.newState(['Yolcu']); store(); renderFlowStart(); });
     on('#go-code', 'click', codeEntry);
     on('#go-how', 'click', how);
   }
@@ -189,6 +196,7 @@
     });
     h += '</div><div class="row mt">' +
       '<button class="btn alt" id="book">Tüy defteri</button>' +
+      '<button class="btn alt" id="flow">Akış</button>' +
       (S.done.length === TOTAL ? '<button class="btn" id="fin">Simurg\'un aynası</button>' : '') +
       '<button class="ghost" id="quit">Ana ekran</button></div>';
     show(h, true);
@@ -196,6 +204,7 @@
       b.addEventListener('click', function () { playChapter(+b.getAttribute('data-ch')); });
     });
     on('#book', 'click', renderBook);
+    on('#flow', 'click', renderFlowStart);
     on('#fin', 'click', renderEnding);
     on('#quit', 'click', function () { renderTitle(); });
   }
@@ -209,6 +218,9 @@
 
   /* ---------- sahne çerçevesi ---------- */
   function head(ci, si, sc) {
+    if (FLOW) {
+      return '<div class="kicker">' + esc(Data.worlds[sc.w]) + ' · ' + (S.flow.i + 1) + '/' + FLOW_LEN + ' · tohum ' + S.flow.seed + '</div>';
+    }
     var ch = Data.chapters[ci];
     var h = '<div class="kicker">' + (ci + 1) + '. durak · ' + esc(ch.title) + ' · ' + (si + 1) + '/' + ch.scenes.length + '</div>';
     if (sc.t !== 'story' && two()) {
@@ -234,9 +246,12 @@
       '<div class="center" style="padding-top:6vh"><div style="font-size:54px">' + ch.icon + '</div>' +
       '<h2>' + esc(ch.title) + ' durağı geride kaldı</h2>' +
       '<p class="dim">Toplanan tüy: ' + S.done.length + ' / ' + TOTAL + '. Yolculuğun bu tarayıcıda saklandı.</p>' +
+      '<div class="card" style="text-align:left"><div class="kicker">Birine anlat</div><p style="margin:0 0 12px">' + esc(ch.tell) + '</p>' +
+      '<button class="btn alt" id="tcp">Kopyala</button> <span class="small dim" id="tcs"></span></div>' +
       '<div class="row mid mt">' +
       (nxt && okay ? '<button class="btn" id="nx">Sıradaki durak: ' + esc(nxt.title) + '</button>' : '') +
       '<button class="btn alt" id="mp">Harita</button></div></div>', true);
+    on('#tcp', 'click', function () { copyText(ch.tell, app.querySelector('#tcs')); });
     on('#nx', 'click', function () { playChapter(ci + 1); });
     on('#mp', 'click', renderMap);
   }
@@ -267,6 +282,7 @@
     var box = app.querySelector('#after');
     box.innerHTML = doneBlock(sc, verdict, cls);
     box.querySelector('#cont').addEventListener('click', function () {
+      if (FLOW) return flowDone(sc, light, correct);
       award(sc, light, bet, correct, function () { goNext(ci, si); });
     });
     box.querySelector('#cont').focus();
@@ -278,8 +294,9 @@
 
   function renderScene(ci, si) {
     var sc = Data.chapters[ci].scenes[si];
-    var fn = SCENES[sc.t];
-    fn(ci, si, sc);
+    FLOW = null;
+    setWorld(Data.chapters[ci].id);
+    SCENES[sc.t](ci, si, sc);
   }
 
   var SCENES = {};
@@ -287,19 +304,24 @@
   SCENES.story = function (ci, si, sc) {
     show(head(ci, si, sc) + '<h2>' + esc(sc.title || '') + '</h2><div class="story mt">' +
       sc.p.map(function (p) { return '<p>' + esc(p) + '</p>'; }).join('') +
-      '</div><button class="btn" id="cont">Devam</button>', true);
+      '</div><button class="btn" id="cont">Devam</button>', true, true);
     on('#cont', 'click', function () { goNext(ci, si); });
   };
 
   /* Çoktan seçmeli soru ve "hangisi yalan": önce seçim, sonra bahis. */
   SCENES.quiz = SCENES.lie = function (ci, si, sc) {
     var pick = -1;
-    show(head(ci, si, sc) + replayNote(sc) + '<p class="q">' + esc(sc.q) + '</p><div class="opts">' +
+    show(head(ci, si, sc) + replayNote(sc) + '<p class="q">' + esc(sc.q) + '</p>' +
+      (sc.verse ? '<div class="verse">' + sc.verse.map(esc).join('<br>') + '</div>' : '') +
+      (sc.micro ? '<div class="card"><div class="micro" id="mi">' + esc(sc.micro) + '</div>' +
+        '<label for="mz">Büyüteç</label><input type="range" id="mz" min="2" max="20" value="2"></div><br>' : '') +
+      '<div class="opts">' +
       shuffle(sc.o.map(function (_, i) { return i; })).map(function (i) { return '<button class="opt" data-i="' + i + '">' + esc(sc.o[i]) + '</button>'; }).join('') +
       '</div><div id="bets" hidden><p class="small dim" style="margin:16px 0 0">Ne kadar eminsin? Doğruysa o kadar ışık kazanır, yanlışsa o kadar kaybedersin.</p><div class="bets">' +
       BETS.map(function (b) { return '<button class="bet" data-b="' + b[0] + '"><b>' + b[0] + '</b>' + b[1] + '</button>'; }).join('') +
-      '</div></div><div id="after"></div>', true);
+      '</div></div><div id="after"></div>', true, true);
     var opts = app.querySelectorAll('.opt');
+    on('#mz', 'input', function (e) { app.querySelector('#mi').style.fontSize = e.target.value + 'px'; });
     opts.forEach(function (b) {
       b.addEventListener('click', function () {
         pick = +b.getAttribute('data-i');
@@ -330,7 +352,7 @@
     var tries = 0, locked = false;
     show(head(ci, si, sc) + replayNote(sc) + '<p class="q">' + esc(sc.q) + '</p><div class="order" id="ord"></div>' +
       '<p class="small" id="msg" style="color:var(--rose);min-height:1.5em;margin-top:10px"></p>' +
-      '<button class="btn" id="chk">Kontrol et</button><div id="after"></div>', true);
+      '<button class="btn" id="chk">Kontrol et</button><div id="after"></div>', true, true);
     function draw() {
       var el = app.querySelector('#ord');
       el.innerHTML = order.map(function (v, i) {
@@ -370,7 +392,7 @@
     var openIdx = [], hits = 0, busy = false, my = epoch + 1;
     show(head(ci, si, sc) + replayNote(sc) + '<p class="q">' + esc(sc.q) + '</p><div class="mem' + (isText ? ' txt' : '') + '">' +
       cards.map(function (c, i) { return '<button class="mc down" data-i="' + i + '" aria-label="Kapalı kart"><span>' + esc(c.s) + '</span></button>'; }).join('') +
-      '</div><div id="after"></div>', true);
+      '</div><div id="after"></div>', true, true);
     var els = app.querySelectorAll('.mc');
     els.forEach(function (b) {
       b.addEventListener('click', function () {
@@ -403,7 +425,7 @@
       '<div class="card"><div class="cipher" id="ct">' + esc(secret) + '</div>' +
       '<label for="sh">Kaydırma: <span id="shv">0</span> harf</label>' +
       '<input type="range" id="sh" min="0" max="' + (Core.ALPHABET.length - 1) + '" value="0"></div>' +
-      '<div id="after"></div>', true);
+      '<div id="after"></div>', true, true);
     var sl = app.querySelector('#sh');
     sl.addEventListener('input', function () {
       var k = +sl.value;
@@ -425,7 +447,7 @@
           '<span class="hcount" data-i="' + i + '">0/' + w + '</span></div>';
       }).join('') +
       '<div class="row"><button class="btn" id="hk" disabled>Deftere yaz</button>' +
-      '<button class="ghost" id="free">Hece saymadan yaz</button></div><div id="after"></div>', true);
+      '<button class="ghost" id="free">Hece saymadan yaz</button></div><div id="after"></div>', true, true);
     var ins = app.querySelectorAll('.hl');
     function lines() { return Array.prototype.map.call(ins, function (x) { return x.value.trim(); }); }
     function upd() {
@@ -453,7 +475,7 @@
     show(head(ci, si, sc) + replayNote(sc) + '<p class="q">' + esc(sc.q) + '</p>' +
       '<textarea id="tx" maxlength="600" aria-label="Yanıtın">' + esc(S.notes[sc.id] || '') + '</textarea>' +
       '<p class="small dim">Doğru ya da yanlış yanıt yok. Yazdığın yalnızca senin defterinde durur.</p>' +
-      '<button class="btn" id="ok">Deftere yaz</button><div id="after"></div>', true);
+      '<button class="btn" id="ok">Deftere yaz</button><div id="after"></div>', true, true);
     on('#ok', 'click', function () {
       var v = app.querySelector('#tx').value.trim();
       if (v.length < 3) { app.querySelector('#tx').focus(); return; }
@@ -468,7 +490,7 @@
     show(head(ci, si, sc) + replayNote(sc) + '<p class="q">' + esc(sc.q) + '</p>' +
       '<div class="breath"><div class="ring" id="ring"></div><div class="btext" id="bt" aria-live="polite">Hazır olduğunda başla.</div>' +
       '<div class="row mid"><button class="btn" id="go">Başla</button><button class="ghost" id="skip">Geç</button></div></div>' +
-      '<div id="after"></div>', true);
+      '<div id="after"></div>', true, true);
     var my = epoch, ring = app.querySelector('#ring'), bt = app.querySelector('#bt');
     function end(light, v) {
       app.querySelector('#go').hidden = app.querySelector('#skip').hidden = true;
@@ -496,7 +518,7 @@
     show(head(ci, si, sc) + replayNote(sc) + '<p class="q">' + esc(sc.q) + '</p>' +
       '<canvas id="fly" width="' + W + '" height="' + H + '" aria-label="Uçuş oyunu alanı"></canvas>' +
       '<p class="small dim" id="hud" style="margin-top:8px">Fareyi ya da parmağını oyun alanında yukarı aşağı gezdir; klavyede ↑ ↓.</p>' +
-      '<div class="row"><button class="btn" id="go">Havalan</button><button class="ghost" id="skip">Geç</button></div><div id="after"></div>', true);
+      '<div class="row"><button class="btn" id="go">Havalan</button><button class="ghost" id="skip">Geç</button></div><div id="after"></div>', true, true);
     var my = epoch, cv = app.querySelector('#fly'), ctx = cv.getContext && cv.getContext('2d');
     var y = H / 2, ty = H / 2, got = 0, things = [], t0 = 0, last = 0, spawn = 0, flash = 0, keys = {};
     function end(light, v) {
@@ -558,10 +580,172 @@
     on('#skip', 'click', function () { end(1, 'Geçildi. '); });
   };
 
+  /* İkilem: doğru yanıtı olmayan seçim. Seçim deftere yazılır. */
+  SCENES.dilemma = function (ci, si, sc) {
+    show(head(ci, si, sc) + '<p class="q">' + esc(sc.q) + '</p><div class="opts">' +
+      sc.o.map(function (o, i) { return '<button class="opt" data-i="' + i + '">' + esc(o) + '</button>'; }).join('') +
+      '</div><p class="small dim" style="margin-top:12px">Doğru yanıt yok. Seçimin defterine yazılır.</p><div id="after"></div>', true, true);
+    var opts = app.querySelectorAll('.opt');
+    opts.forEach(function (b) {
+      b.addEventListener('click', function () {
+        opts.forEach(function (x) { x.disabled = true; });
+        b.classList.add('sel');
+        S.notes[sc.id] = sc.o[+b.getAttribute('data-i')]; store();
+        finish(ci, si, sc, 1, 'Seçimin yazıldı. ' + lightText(1), 'ok');
+      });
+    });
+  };
+
+  /* Lipogram: yasaklı harfi kullanmadan yaz. */
+  SCENES.lipo = function (ci, si, sc) {
+    show(head(ci, si, sc) + '<p class="q">' + esc(sc.q) + '</p>' +
+      '<textarea id="tx" maxlength="300" aria-label="Cümlen"></textarea>' +
+      '<p class="small" id="lp" style="min-height:1.5em"></p>' +
+      '<div class="row"><button class="btn" id="ok" disabled>Yazdım</button><button class="ghost" id="skip">Geç</button></div><div id="after"></div>', true, true);
+    var tx = app.querySelector('#tx'), lp = app.querySelector('#lp');
+    tx.addEventListener('input', function () {
+      var r = Core.lipoCheck(tx.value, sc.ban, sc.min);
+      lp.style.color = r.hits ? 'var(--rose)' : 'var(--leaf)';
+      lp.textContent = r.hits ? 'İçinde ' + r.hits + ' tane “' + sc.ban + '” var.' : r.words + ' / ' + sc.min + ' sözcük, “' + sc.ban + '” yok.';
+      app.querySelector('#ok').disabled = !r.ok;
+    });
+    function end(light, v) {
+      tx.disabled = true;
+      app.querySelector('#ok').hidden = app.querySelector('#skip').hidden = true;
+      finish(ci, si, sc, light, v + lightText(light), 'ok');
+    }
+    on('#ok', 'click', function () { S.notes[sc.id] = tx.value.trim(); store(); end(3, 'Başardın. '); });
+    on('#skip', 'click', function () { end(0, 'Geçildi. '); });
+  };
+
+  /* Hızlı tur: süreli doğru / efsane. */
+  SCENES.rapid = function (ci, si, sc) {
+    var LIMIT = 6000;
+    show(head(ci, si, sc) + '<p class="q">' + esc(sc.q) + '</p>' +
+      '<div class="card rapid"><div class="tbar"><i id="tb"></i></div><p id="rs" class="rstmt">Hazır mısın?</p>' +
+      '<div class="row mid" id="rb" hidden><button class="btn" data-v="1">Doğru</button><button class="btn alt" data-v="0">Efsane</button></div></div>' +
+      '<div class="row mt" id="rgo"><button class="btn" id="go">Başla</button><button class="ghost" id="slow">Süresiz oyna</button></div>' +
+      '<div id="res"></div><div id="after"></div>', true, true);
+    var my = epoch, k = -1, right = 0, timed = true, timer = null, log = [];
+    var tb = app.querySelector('#tb');
+    function next() {
+      if (epoch !== my) return;
+      clearTimeout(timer);
+      k++;
+      if (k >= sc.items.length) return end();
+      app.querySelector('#rs').textContent = sc.items[k][0];
+      if (timed) {
+        tb.style.transition = 'none'; tb.style.width = '100%';
+        void tb.offsetWidth;
+        tb.style.transition = 'width ' + LIMIT + 'ms linear'; tb.style.width = '0%';
+        timer = setTimeout(function () { answer(null); }, LIMIT);
+      }
+    }
+    function answer(v) {
+      if (epoch !== my || k < 0 || k >= sc.items.length) return;
+      var ok = v !== null && v === sc.items[k][1];
+      if (ok) right++;
+      log.push([sc.items[k][0], sc.items[k][1], ok]);
+      next();
+    }
+    function end() {
+      my = -1;
+      app.querySelector('.rapid').hidden = true;
+      app.querySelector('#res').innerHTML = '<div class="rlog">' + log.map(function (l) {
+        return '<div class="' + (l[2] ? 'ok' : 'no') + '">' + (l[2] ? '✓' : '✗') + ' ' + esc(l[0]) + ' <b>' + (l[1] ? 'Doğru' : 'Efsane') + '</b></div>';
+      }).join('') + '</div>';
+      var light = Math.floor(right / 2);
+      finish(ci, si, sc, light, right + ' / ' + sc.items.length + ' bildin. ' + lightText(light), right * 2 >= sc.items.length ? 'ok' : 'no', null, right * 2 >= sc.items.length);
+    }
+    function start(t) {
+      timed = t;
+      app.querySelector('#rgo').hidden = true;
+      app.querySelector('#rb').hidden = false;
+      app.querySelector('.tbar').style.visibility = t ? 'visible' : 'hidden';
+      next();
+    }
+    app.querySelectorAll('#rb button').forEach(function (b) {
+      b.addEventListener('click', function () { answer(b.getAttribute('data-v') === '1'); });
+    });
+    on('#go', 'click', function () { start(true); });
+    on('#slow', 'click', function () { start(false); });
+  };
+
+  /* ---------- Akış: tohumla belirlenen on iki kartlık kısa tur ---------- */
+  function flowDeck() { return Core.flowDeck(S.flow.seed, Data.flow, FLOW_LEN); }
+  function randomSeed() { return 100000 + Math.floor(Math.random() * 900000); }
+
+  function renderFlowStart() {
+    var cur = S.flow && S.flow.i < FLOW_LEN ? S.flow : null;
+    show(
+      '<div class="kicker">Akış</div><h2>On iki kart, on iki dünya</h2>' +
+      '<p class="dim">Her kart başka bir yerden gelir: bir dize, bir film, bir görenek, bir düşünce deneyi, bir hızlı tur. Kartlar bir iki dakika sürer.</p>' +
+      '<p class="dim">Kartları altı haneli bir <b>tohum</b> belirler. Aynı tohumu giren herkes aynı kartları aynı sırayla görür: tohumu bir arkadaşına ver, sonuçlarınızı karşılaştırın. Yarıda bırakırsan tohum ve kaldığın kart saklanır.</p>' +
+      (cur ? '<div class="card" style="margin-bottom:18px"><p style="margin:0 0 12px">Yarım kalan akış: tohum <b>' + cur.seed + '</b>, ' + (cur.i + 1) + '. kart.</p><button class="btn" id="fgo">Sürdür</button></div>' : '') +
+      '<label for="seed">Tohum (boş bırakırsan rastgele seçilir)</label>' +
+      '<input type="text" id="seed" inputmode="numeric" maxlength="6" placeholder="örneğin 271828" style="max-width:220px">' +
+      '<div class="row mt"><button class="btn' + (cur ? ' alt' : '') + '" id="fnew">Yeni akış başlat</button><button class="ghost" id="back">Geri</button></div>', false);
+    on('#fgo', 'click', renderFlowCard);
+    on('#fnew', 'click', function () {
+      var v = parseInt(app.querySelector('#seed').value.replace(/\D/g, ''), 10);
+      S.flow = { seed: v >= 1 && v <= 999999 ? v : randomSeed(), i: 0, l: 0, ok: 0, n: 0 };
+      store(); renderFlowCard();
+    });
+    on('#back', 'click', function () { S.done.length || Object.keys(S.pos).length ? renderMap() : renderTitle(); });
+  }
+
+  function renderFlowCard() {
+    var card = Data.flow[flowDeck()[S.flow.i]];
+    if (!card) return renderFlowEnd();
+    FLOW = card;
+    setWorld(card.w);
+    SCENES[card.t](-1, -1, card);
+    bar.hidden = true;
+    var exit = document.createElement('div');
+    exit.className = 'row mt';
+    exit.innerHTML = '<button class="ghost" id="fexit">Akıştan çık (kaldığın yer saklanır)</button>';
+    app.appendChild(exit);
+    exit.querySelector('#fexit').addEventListener('click', renderFlowStart);
+  }
+
+  function flowDone(sc, light, correct) {
+    S.flow.i++;
+    S.flow.l = Math.max(0, S.flow.l + light);
+    if (typeof correct === 'boolean') { S.flow.n++; if (correct) S.flow.ok++; }
+    store();
+    S.flow.i < FLOW_LEN ? renderFlowCard() : renderFlowEnd();
+  }
+
+  function renderFlowEnd() {
+    var f = S.flow;
+    var line = 'Otuz Kuş · tohum ' + f.seed + ' · ' + f.ok + '/' + f.n + ' doğru · ' + f.l + ' ışık. Aynı tohumla sen de dene.';
+    show(
+      '<div class="center" style="padding-top:5vh"><div style="font-size:54px">🌱</div><div class="kicker">Akış bitti</div>' +
+      '<h2>Tohum ' + f.seed + '</h2><p>' + f.ok + ' / ' + f.n + ' doğru · ' + f.l + ' ışık</p>' +
+      '<p class="dim">Bu tohumu birine ver. Aynı on iki kartı oynasın; nerede ayrıldığınıza bakın.</p>' +
+      '<div class="card" style="text-align:left"><p class="small" id="fl" style="margin:0 0 10px">' + esc(line) + '</p>' +
+      '<button class="btn alt" id="fcp">Kopyala</button> <span class="small dim" id="fcs"></span></div>' +
+      '<div class="row mid mt"><button class="btn" id="again">Yeni akış</button><button class="btn alt" id="book">Tüy defteri</button><button class="ghost" id="home">Ana ekran</button></div></div>', false);
+    on('#fcp', 'click', function () { copyText(line, app.querySelector('#fcs')); });
+    on('#again', 'click', renderFlowStart);
+    on('#book', 'click', renderBook);
+    on('#home', 'click', function () { renderTitle(); });
+  }
+
+  function copyText(text, sayEl) {
+    function ok() { sayEl.textContent = 'Kopyalandı.'; }
+    function manual() { sayEl.textContent = 'Kopyalanamadı; metni elle seçip kopyala.'; }
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(ok, manual);
+      else manual();
+    } catch (e) { manual(); }
+  }
+
   /* ---------- defter, kayıt, son ---------- */
   function sceneById(id) {
     var out = null;
     Data.chapters.forEach(function (ch) { ch.scenes.forEach(function (s) { if (s.id === id) out = s; }); });
+    Data.flow.forEach(function (s) { if (s.id === id) out = s; });
     return out;
   }
 
@@ -622,6 +806,11 @@
     else if (pct[3] !== null && pct[3] >= 80) say = '"Kalıbımı basarım" dediğinde çoğunlukla haklı çıktın. Ne kadar bildiğini iyi biliyorsun.';
     else if (pct[3] !== null) say = '"Kalıbımı basarım" dediğin yanıtların bir bölümü yanlış çıktı. Emin olmadan önce bir kez daha bakmak iyi bir alışkanlık.';
     else say = 'Hiç "kalıbımı basarım" demedin. Temkin iyidir; ama bildiğin şeyin arkasında durmak da bilgidir.';
+    var tot = S.cal[1][1] + S.cal[2][1] + S.cal[3][1], hit = S.cal[1][0] + S.cal[2][0] + S.cal[3][0];
+    var kind;
+    if (tot && hit / tot >= 0.6 && S.cal[3][1] > S.cal[1][1]) kind = ['Bilgin', 'Çoğunu bildin ve bildiğinin arkasında durdun. Kesinlik senin yolun; yalnız, emin olduğun yerde yeniden bakmayı unutma.'];
+    else if (tot && hit / tot >= 0.6) kind = ['Şair', 'Çoğunu bildin ama kesinliğe yaslanmadın. Bildiğin şeyi bile soru olarak taşıyorsun.'];
+    else kind = ['Yolcu', 'Bilmediğin çok şey çıktı karşına ve yürümeyi sürdürdün. Bu oyunun anlattığı insanların çoğu da böyle başladı.'];
     var ps = S.players.map(function (p) { return esc(p.n) + ': <b>' + p.l + '</b> ışık'; }).join(' · ');
     show(
       '<div class="center"><div style="font-size:64px">🔥</div><div class="kicker">Otuzuncu tüy</div><h1>Sî murg</h1></div>' +
@@ -634,6 +823,7 @@
       '<table><tr><th>Bahis</th><th>Doğru / toplam</th><th>İsabet</th></tr>' + rows + '</table>' +
       '<p class="small" style="margin:14px 0 0">' + say + '</p>' +
       '<p class="small dim" style="margin:10px 0 0">' + ps + '</p></div>' +
+      '<div class="card mt"><div class="kicker">Yol sana ne dedi</div><h3>' + kind[0] + '</h3><p style="margin:0">' + kind[1] + '</p></div>' +
       '<div class="row mt"><button class="btn" id="book">Tüy defteri</button><button class="btn alt" id="mp">Harita</button></div>', true);
     on('#book', 'click', renderBook);
     on('#mp', 'click', renderMap);

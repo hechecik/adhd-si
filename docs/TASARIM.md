@@ -14,11 +14,12 @@ Oyunun konusu insan; mekaniği ise bilginin kendisi. Oyuncu yalnızca bilgi topl
 - **Haiku denetimi yalnızca hece sayar.** Türkçede hece sayısı ünlü sayısına eşit olduğu için güvenilirdir; ama şiirin iyi olup olmadığını ölçmez.
 - **Görseller emoji.** Kuşların görünümü işletim sistemine göre değişir; bazı eski sistemlerde birkaç emoji boş kutu çıkabilir.
 - **Ses yok.** Kuş sesleri ve müzik lisanslı kayıt gerektirir.
-- **İçerik bir kez oynanır.** 30 sahne sabittir; ikinci oyunda sorular aynıdır (şıkların sırası değişir).
+- **Yolculuk bir kez oynanır.** 30 sahne sabittir; ikinci oyunda sorular aynıdır (şıkların sırası değişir). Yeniden oynanabilirlik Akış modundadır; orada da 42 kartlık havuz dört beş turda tükenir.
+- **Akışta iki kişi ayrı cihazda oynar.** Aynı tohumla aynı kartları görürler ama sonuçları kendileri karşılaştırır; oyun iki sonucu yan yana gösteremez.
 - **Yalnızca Türkçe.**
 
 ## Yol haritası (öneri)
-1. Her durak için ikinci bir soru havuzu: yeniden oynanabilirlik.
+1. Akış havuzunu 42'den 120 karta çıkarmak; yeni dünyalar: müzik, yemek, şehir, deniz, oyun.
 2. Çizim kuş ve çiçek görselleri (SVG), emoji yerine.
 3. Kürtçe, Arapça ve İngilizce arayüz; özellikle 7. durak için.
 4. Çevrimdışı kullanım (service worker) ve ana ekrana ekleme.
