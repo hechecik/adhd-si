@@ -104,16 +104,17 @@
       '</div></div>', false);
     on('#go-on', 'click', function () { S = saved; renderMap(); });
     on('#go-new', 'click', function () {
-      if (saved && !confirmNew()) return;
-      renderSetup();
+      if (!saved) return renderSetup();
+      openModal(
+        '<h3>Yeni yolculuk</h3><p class="small">Kayıtlı yolculuğun (' + saved.done.length + '/30 tüy) yenisi başlayınca silinir. ' +
+        'Saklamak istersen önce devam edip "Kaydet"ten tüy kodunu al.</p>' +
+        '<div class="row"><button class="btn" id="new-ok">Yine de yeni başla</button><button class="ghost" data-close>Vazgeç</button></div>');
+      modalBox.querySelector('#new-ok').addEventListener('click', function () { closeModal(); renderSetup(); });
+      modalBox.querySelector('[data-close]').addEventListener('click', closeModal);
     });
     on('#go-code', 'click', codeEntry);
     on('#go-how', 'click', how);
   }
-  function confirmNew() {
-    return window.confirm('Kayıtlı yolculuğun silinip yenisi başlayacak. Emin misin? (Önce "Kaydet" ile tüy kodunu alabilirsin.)');
-  }
-
   function how() {
     openModal(
       '<h3>Nasıl oynanır?</h3>' +
