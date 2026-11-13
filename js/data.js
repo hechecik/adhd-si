@@ -1,8 +1,7 @@
 /* Otuz Kuş — oyunun bütün içeriği.
    KURALLAR (bkz. AGENTS.md):
    - Telifli şiir/kitap metni alıntılanmaz; yazarlar temaları, yaşamları ve eser adlarıyla anlatılır.
-   - Her bilgi doğrulanabilir olmalı. Tek kasıtlı yanlış: "Tohum" bölümündeki %10 beyin efsanesi
-     (25. tüyde oyuncuya buldurulur). Başka bilerek yanlış bilgi yoktur. */
+   - Her bilgi doğrulanabilir olmalı. İçerik değiştirmeden önce AGENTS.md okunur. */
 (function (root) {
   'use strict';
 
