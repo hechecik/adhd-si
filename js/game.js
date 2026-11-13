@@ -105,6 +105,7 @@
       '<div class="stack" style="max-width:320px;margin:0 auto">' +
       (started ? '<button class="btn" id="go-on">Kaldığın yerden devam et (' + saved.done.length + '/30)</button>' : '') +
       '<button class="btn' + (started ? ' alt' : '') + '" id="go-new">Yeni yolculuk</button>' +
+      '<button class="btn alt" id="go-quest">Arayış: iki kişinin yolu</button>' +
       '<button class="btn alt" id="go-flow">Akış: on iki kartlık kısa tur</button>' +
       '<button class="btn alt" id="go-code">Tüy koduyla devam et</button>' +
       '<button class="ghost" id="go-how">Nasıl oynanır?</button>' +
@@ -120,6 +121,7 @@
       modalBox.querySelector('[data-close]').addEventListener('click', closeModal);
     });
     on('#go-flow', 'click', function () { S = saved || Core.newState(['Yolcu']); store(); renderFlowStart(); });
+    on('#go-quest', 'click', function () { window.Quest.open(); });
     on('#go-code', 'click', codeEntry);
     on('#go-how', 'click', how);
   }
@@ -899,6 +901,12 @@
   document.getElementById('btn-save').addEventListener('click', saveDialog);
 
   (function boot() {
+    window.OtuzKus = { home: function () { renderTitle(); } };
+    var qq = /#q=([\w-]+)/.exec(location.hash);
+    if (qq) {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* önemsiz */ }
+      return window.Quest.open(qq[1]);
+    }
     var mm = /#m=([\w-]+)/.exec(location.hash);
     if (mm) {
       try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* önemsiz */ }

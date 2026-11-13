@@ -15,6 +15,9 @@
 
 - **Gizem:** README, commit mesajları, PR açıklamaları ve repodaki belgeler oyunun sürprizlerini, sonunu ya da yapım aşamasındaki tasarım tartışmalarını anlatmaz. Tasarım notları repo dışında tutulur.
 
+- Arayış modu `js/qdata.js` (içerik), `js/qcore.js` (saf mantık, `tests/quest.test.js`) ve `js/quest.js` (arayüz) dosyalarındadır. Karakterler tarafa göre iki ayrı listede tutulur; her karakterin kim olduğu, ne yaptığı ve nereye vardığı yazılır, emin olunan kaynak varsa künyesi eklenir.
+- Arayış'ta süreli sahneler test için `window.__qfast` ile hızlandırılır.
+
 ## Kod
 - Derleme adımı, paket yöneticisi ve dış bağımlılık yok. Dış font, CDN ya da izleme kodu eklenmez.
 - Saf fonksiyonlar `js/core.js`'e yazılır ve `tests/test.js`'te test edilir.

@@ -128,3 +128,4 @@ t('akış destesi: aynı tohum aynı deste, ritim kuralı tutuyor', () => {
   assert.notDeepStrictEqual(Core.flowDeck(1, Data.flow, 12), Core.flowDeck(2, Data.flow, 12));
 });
 console.log(n + '/' + n + ' test geçti');
+require('./quest.test.js');
